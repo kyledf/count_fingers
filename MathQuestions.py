@@ -4,44 +4,62 @@ import time
 import FingerCounting as fc
 import cv2
 
+
 class MathQuestions(threading.Thread):
-    def __init__(self, name, score):
+    def __init__(self):
         threading.Thread.__init__(self)
-        self.name = name
-        self.score = score
-        self.questions = ["What is 1 + 1?", "What is 2 + 2?", "What is 3 + 3?", "What is 4 + 4?", "What is 5 + 5?"]
-        self.answers = ["2", "4", "6", "8", "10"]
-        self.question = ""
-        self.answer = ""
-        self.total = 0
-        self.correct = 0
-        self.userAnswer = ""
-        self.gameOver = False
+        self.score = 0
+        # # dictionary with answer keys and question values for each operation
+        self.answers_and_questions = {
+            "1": ["What is 0 + 1?", "What is 3 - 2?", "What is 1 x 1?", "What is 2 / 2?"],
+            "2": ["What is 1 + 1?", "What is 5 - 3?", "What is 2 x 1?", "What is 4 / 2?"],
+            "3": ["What is 1 + 2?", "What is 7 - 4?", "What is 3 x 1?", "What is 9 / 3?"],
+            "4": ["What is 2 + 2?", "What is 9 - 5?", "What is 2 x 2?", "What is 24 / 6?"],
+            "5": ["What is 2 + 3?", "What is 11 - 6?", "What is 5 x 1?", "What is 15 / 3?"],
+            "6": ["What is 3 + 3?", "What is 13 - 7?", "What is 2 x 3?", "What is 54 / 9?"],
+            "7": ["What is 5 + 2?", "What is 16 - 9?", "What is 7 x 1?", "What is 56 / 8?"],
+            "8": ["What is 4 + 4?", "What is 19 - 11?", "What is 2 x 4?", "What is 32 / 4?"],
+            "9": ["What is 5 + 4?", "What is 21 - 12?", "What is 3 x 3?", "What is 81 / 9?"],
+            "10": ["What is 5 + 5?", "What is 25 - 15?", "What is 2 x 5?", "What is 100 / 10?"],
+        }
+        self.current_question = ""
+        self.current_answer = ""
+        self.total_questions = 40
+        self.correct_answers = 0
+        self.user_answer = ""
+        self.game_over = False
         self.current_time = 0
         self.max_time = 15
 
     def run(self):
-        self.total = len(self.questions)
-        for i in range(self.total):
+        for i in range(self.total_questions):
+            if self.answers_and_questions == {}:
+                break
+            number_of_questions = 0
+            while number_of_questions == 0:
+                random_answer = random.randint(1, 10)
+                self.current_answer = str(random_answer)
+                number_of_questions = len(self.answers_and_questions[self.current_answer])
+            random_question = random.randint(0, number_of_questions - 1)
+            self.current_question = self.answers_and_questions[self.current_answer][random_question]
+            del self.answers_and_questions[self.current_answer][random_question]
+            if not self.answers_and_questions[self.current_answer]:
+                del self.answers_and_questions[self.current_answer]
             self.current_time = time.time()
-            self.question = self.questions[i]
-            self.answer = self.answers[i]
-            while self.userAnswer != self.answer:
+            while self.user_answer != self.current_answer:
                 time.sleep(0.5)
                 if time.time() - self.current_time > self.max_time:
                     break
-            if self.userAnswer == self.answer:
-                self.correct += 1
+            if self.user_answer == self.current_answer:
+                self.correct_answers += 1
             time.sleep(0.5)
-        self.score = self.correct / self.total * 100
-        self.gameOver = True
+        self.score = self.correct_answers / self.total_questions * 100
+        self.game_over = True
 
 
 def main():
     cap = cv2.VideoCapture(0)
-
-    score = 0
-    math = MathQuestions("Math", score)
+    math = MathQuestions()
     detector = fc.FingerCounting()
     math.start()
     while True:
@@ -49,19 +67,23 @@ def main():
         h, w, c = img.shape
         image = cv2.flip(img, 1)
         image = detector.find_hands(image, draw=False)
-        if not math.gameOver:
-            cv2.putText(image, "Time Remaining: " + str(math.max_time - int(time.time() - math.current_time)), (10, h - 10), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
-            cv2.putText(image, math.question, (10, 70), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
-            math.userAnswer = str(detector.count_fingers(image))
-            cv2.putText(image, math.userAnswer, (800, 70), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
-            if math.userAnswer == math.answer:
+        if not math.game_over:
+            cv2.putText(image, "Time Remaining: " + str(math.max_time - int(time.time() - math.current_time)),
+                        (10, h - 10), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
+            cv2.putText(image, math.current_question, (10, 70), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
+            math.user_answer = str(detector.count_fingers(image))
+            cv2.putText(image, math.user_answer, (800, 70), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
+            if math.user_answer == math.current_answer:
                 cv2.putText(image, "Correct!", (10, 150), cv2.FONT_HERSHEY_PLAIN, 5, (0, 255, 0), 5)
         else:
-            cv2.putText(image, "Score: " + str(math.correct / math.total * 100) + "%", (10, 70), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
+            cv2.putText(image, "Score: " + str(math.correct_answers / math.total_questions * 100) + "%", (10, 70),
+                        cv2.FONT_HERSHEY_PLAIN,
+                        5, (255, 0, 255), 5)
         cv2.imshow("Output", image)
         cv2.waitKey(1)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
 
 if __name__ == "__main__":
     main()
