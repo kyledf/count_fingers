@@ -1,8 +1,9 @@
 import threading
 import random
 import time
-import FingerCounting as fc
 import cv2
+import FingerCounting as count
+import FactAPI as facts
 
 
 class MathQuestions(threading.Thread):
@@ -31,6 +32,7 @@ class MathQuestions(threading.Thread):
         self.current_time = 0
         self.max_time = 15
         self.question_number = 0
+        self.number_fact = ""
 
     def run(self):
         for i in range(self.total_questions):
@@ -49,8 +51,14 @@ class MathQuestions(threading.Thread):
             if not self.answers_and_questions[self.current_answer]:
                 del self.answers_and_questions[self.current_answer]
             self.current_time = time.time()
+            self.number_fact = facts.FactAPI(self.current_answer).get_fact()
+            # split fact into multiple lines at spaces if possible
+            for char in range(1, len(self.number_fact)):
+                if char % 60 == 0:
+                    while self.number_fact[char] != " ":
+                        char -= 1
+                    self.number_fact = self.number_fact[:char] + "\n" + self.number_fact[char:]
             while self.user_answer != self.current_answer:
-                time.sleep(0.5)
                 if time.time() - self.current_time > self.max_time:
                     break
             if self.user_answer == self.current_answer:
@@ -63,7 +71,7 @@ class MathQuestions(threading.Thread):
 def main():
     cap = cv2.VideoCapture(0)
     math = MathQuestions()
-    detector = fc.FingerCounting()
+    detector = count.FingerCounting()
     math.start()
     while True:
         success, img = cap.read()
@@ -73,9 +81,9 @@ def main():
         if not math.game_over:
             # change color of progress bar as time goes down
             color = (0, 255, 0)  # green
-            if time.time() - math.current_time > math.max_time / 2:
+            if time.time() - math.current_time > math.max_time / 3:
                 color = (0, 255, 255)  # yellow
-            if time.time() - math.current_time > math.max_time * 3 / 4:
+            if time.time() - math.current_time > math.max_time * 2 / 3:
                 color = (0, 0, 255)  # red
             # create progress bar that goes down as time goes down
             cv2.rectangle(image, (0, h - 10), (int(w * (1 - (time.time() - math.current_time) / math.max_time)), h),
@@ -85,6 +93,10 @@ def main():
                         cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
             math.user_answer = str(detector.count_fingers(image))
             cv2.putText(image, math.user_answer, (900, 70), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
+            cv2.rectangle(image, (0, h - 75), (w, h - 175), (0, 0, 0), cv2.FILLED)
+            # display fact about answer on multiple lines
+            for i, line in enumerate(math.number_fact.split("\n")):
+                cv2.putText(image, ("Hint: " if i == 0 else "") + line, (10, h - (150 - (25 * (i + 1)))), cv2.FONT_HERSHEY_PLAIN, 1.8, (255, 255, 255), 2)
             if math.user_answer == math.current_answer:
                 cv2.putText(image, "Correct!", (10, 150), cv2.FONT_HERSHEY_PLAIN, 5, (0, 255, 0), 5)
         else:
