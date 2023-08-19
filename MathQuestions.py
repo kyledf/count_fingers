@@ -30,16 +30,19 @@ class MathQuestions(threading.Thread):
         self.game_over = False
         self.current_time = 0
         self.max_time = 15
+        self.question_number = 0
 
     def run(self):
         for i in range(self.total_questions):
+            self.question_number = i + 1
             if self.answers_and_questions == {}:
                 break
             number_of_questions = 0
             while number_of_questions == 0:
                 random_answer = random.randint(1, 10)
                 self.current_answer = str(random_answer)
-                number_of_questions = len(self.answers_and_questions[self.current_answer])
+                if self.current_answer in self.answers_and_questions.keys():
+                    number_of_questions = len(self.answers_and_questions[self.current_answer])
             random_question = random.randint(0, number_of_questions - 1)
             self.current_question = self.answers_and_questions[self.current_answer][random_question]
             del self.answers_and_questions[self.current_answer][random_question]
@@ -68,11 +71,20 @@ def main():
         image = cv2.flip(img, 1)
         image = detector.find_hands(image, draw=False)
         if not math.game_over:
-            cv2.putText(image, "Time Remaining: " + str(math.max_time - int(time.time() - math.current_time)),
-                        (10, h - 10), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
-            cv2.putText(image, math.current_question, (10, 70), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
+            # change color of progress bar as time goes down
+            color = (0, 255, 0)  # green
+            if time.time() - math.current_time > math.max_time / 2:
+                color = (0, 255, 255)  # yellow
+            if time.time() - math.current_time > math.max_time * 3 / 4:
+                color = (0, 0, 255)  # red
+            # create progress bar that goes down as time goes down
+            cv2.rectangle(image, (0, h - 10), (int(w * (1 - (time.time() - math.current_time) / math.max_time)), h),
+                          color, cv2.FILLED)
+            # display question and answer
+            cv2.putText(image, str(math.question_number) + ") " + math.current_question, (10, 70),
+                        cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
             math.user_answer = str(detector.count_fingers(image))
-            cv2.putText(image, math.user_answer, (800, 70), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
+            cv2.putText(image, math.user_answer, (900, 70), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
             if math.user_answer == math.current_answer:
                 cv2.putText(image, "Correct!", (10, 150), cv2.FONT_HERSHEY_PLAIN, 5, (0, 255, 0), 5)
         else:
