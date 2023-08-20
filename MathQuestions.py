@@ -10,7 +10,7 @@ class MathQuestions(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.score = 0
-        # # dictionary with answer keys and question values for each operation
+        # dictionary with answer keys and question values for each operation
         self.answers_and_questions = {
             "1": ["What is 0 + 1?", "What is 3 - 2?", "What is 1 x 1?", "What is 2 / 2?"],
             "2": ["What is 1 + 1?", "What is 5 - 3?", "What is 2 x 1?", "What is 4 / 2?"],
