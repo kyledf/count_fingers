@@ -13,15 +13,15 @@ class MathQuestions(threading.Thread):
         # dictionary with answer keys and question values for each operation
         self.answers_and_questions = {
             "1": ["What is 0 + 1?", "What is 3 - 2?", "What is 1 x 1?", "What is 2 / 2?"],
-            # "2": ["What is 1 + 1?", "What is 5 - 3?", "What is 2 x 1?", "What is 4 / 2?"],
-            # "3": ["What is 1 + 2?", "What is 7 - 4?", "What is 3 x 1?", "What is 9 / 3?"],
-            # "4": ["What is 2 + 2?", "What is 9 - 5?", "What is 2 x 2?", "What is 24 / 6?"],
-            # "5": ["What is 2 + 3?", "What is 11 - 6?", "What is 5 x 1?", "What is 15 / 3?"],
-            # "6": ["What is 3 + 3?", "What is 13 - 7?", "What is 2 x 3?", "What is 54 / 9?"],
-            # "7": ["What is 5 + 2?", "What is 16 - 9?", "What is 7 x 1?", "What is 56 / 8?"],
-            # "8": ["What is 4 + 4?", "What is 19 - 11?", "What is 2 x 4?", "What is 32 / 4?"],
-            # "9": ["What is 5 + 4?", "What is 21 - 12?", "What is 3 x 3?", "What is 81 / 9?"],
-            # "10": ["What is 5 + 5?", "What is 25 - 15?", "What is 2 x 5?", "What is 100 / 10?"],
+            "2": ["What is 1 + 1?", "What is 5 - 3?", "What is 2 x 1?", "What is 4 / 2?"],
+            "3": ["What is 1 + 2?", "What is 7 - 4?", "What is 3 x 1?", "What is 9 / 3?"],
+            "4": ["What is 2 + 2?", "What is 9 - 5?", "What is 2 x 2?", "What is 24 / 6?"],
+            "5": ["What is 2 + 3?", "What is 11 - 6?", "What is 5 x 1?", "What is 15 / 3?"],
+            "6": ["What is 3 + 3?", "What is 13 - 7?", "What is 2 x 3?", "What is 54 / 9?"],
+            "7": ["What is 5 + 2?", "What is 16 - 9?", "What is 7 x 1?", "What is 56 / 8?"],
+            "8": ["What is 4 + 4?", "What is 19 - 11?", "What is 2 x 4?", "What is 32 / 4?"],
+            "9": ["What is 5 + 4?", "What is 21 - 12?", "What is 3 x 3?", "What is 81 / 9?"],
+            "10": ["What is 5 + 5?", "What is 25 - 15?", "What is 2 x 5?", "What is 100 / 10?"],
         }
         self.current_question = ""
         self.current_answer = ""
@@ -34,31 +34,36 @@ class MathQuestions(threading.Thread):
         self.question_number = 1
         self.number_fact = ""
 
+    def get_question(self):
+        number_of_questions = 0
+        while number_of_questions == 0:
+            random_answer = random.randint(1, len(self.answers_and_questions.keys()))
+            self.current_answer = str(random_answer)
+            if self.current_answer in self.answers_and_questions.keys():
+                number_of_questions = len(self.answers_and_questions[self.current_answer])
+        random_question = random.randint(0, number_of_questions - 1)
+        self.current_question = self.answers_and_questions[self.current_answer][random_question]
+        del self.answers_and_questions[self.current_answer][random_question]
+        if not self.answers_and_questions[self.current_answer]:
+            del self.answers_and_questions[self.current_answer]
+
+    def split_fact(self):
+        # split fact into multiple lines at spaces if possible
+        for char in range(1, len(self.number_fact)):
+            if char % 60 == 0:
+                while self.number_fact[char] != " ":
+                    char -= 1
+                self.number_fact = self.number_fact[:char] + "\n" + self.number_fact[char:]
+
     def run(self):
         while not self.game_over:
             if self.answers_and_questions == {}:
                 print("No more questions")
                 break
-            number_of_questions = 0
-            while number_of_questions == 0:
-                random_answer = random.randint(1, len(self.answers_and_questions.keys()))
-                self.current_answer = str(random_answer)
-                if self.current_answer in self.answers_and_questions.keys():
-                    number_of_questions = len(self.answers_and_questions[self.current_answer])
-            random_question = random.randint(0, number_of_questions - 1)
-            self.current_question = self.answers_and_questions[self.current_answer][random_question]
-            del self.answers_and_questions[self.current_answer][random_question]
-            if not self.answers_and_questions[self.current_answer]:
-                print("No more questions for " + self.current_answer)
-                del self.answers_and_questions[self.current_answer]
+            self.get_question()
             self.current_time = time.time()
             self.number_fact = facts.FactAPI(self.current_answer).get_fact()
-            # split fact into multiple lines at spaces if possible
-            for char in range(1, len(self.number_fact)):
-                if char % 60 == 0:
-                    while self.number_fact[char] != " ":
-                        char -= 1
-                    self.number_fact = self.number_fact[:char] + "\n" + self.number_fact[char:]
+            self.split_fact()
             while self.user_answer != self.current_answer:
                 if time.time() - self.current_time > self.max_time:
                     break
@@ -98,7 +103,8 @@ def main():
             cv2.rectangle(image, (0, h - 75), (w, h - 175), (0, 0, 0), cv2.FILLED)
             # display fact about answer on multiple lines
             for i, line in enumerate(math.number_fact.split("\n")):
-                cv2.putText(image, ("Hint: " if i == 0 else "") + line, (10, h - (150 - (25 * (i + 1)))), cv2.FONT_HERSHEY_PLAIN, 1.8, (255, 255, 255), 2)
+                cv2.putText(image, ("Hint: " if i == 0 else "") + line, (10, h - (150 - (25 * (i + 1)))),
+                            cv2.FONT_HERSHEY_PLAIN, 1.8, (255, 255, 255), 2)
             if math.user_answer == math.current_answer:
                 cv2.putText(image, "Correct!", (10, 150), cv2.FONT_HERSHEY_PLAIN, 5, (0, 255, 0), 5)
         else:
@@ -106,8 +112,10 @@ def main():
                         cv2.FONT_HERSHEY_PLAIN,
                         5, (255, 0, 255), 5)
             # instructions for hold up 5 fingers on left hand to play again or 5 fingers on right hand to quit
-            cv2.putText(image, "Hold up 5 fingers on your left hand to play again", (10, 150), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 255), 2)
-            cv2.putText(image, "Hold up 5 fingers on your right hand to quit", (10, 200), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 255), 2)
+            cv2.putText(image, "Hold up 5 fingers on your left hand to play again", (10, 150), cv2.FONT_HERSHEY_PLAIN,
+                        2, (255, 0, 255), 2)
+            cv2.putText(image, "Hold up 5 fingers on your right hand to quit", (10, 200), cv2.FONT_HERSHEY_PLAIN, 2,
+                        (255, 0, 255), 2)
             if detector.count_fingers(image) == 5 and detector.hand_side == "Left":
                 math = MathQuestions()
                 math.start()
