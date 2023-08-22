@@ -48,14 +48,16 @@ while True:
         cv2.putText(image, str(math.question_number) + ") " + math.current_question, (10, 70),
                     cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
         math.user_answer = str(detector.count_fingers(image))
-        cv2.putText(image, math.user_answer, (w - 100, 70), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
+        answer_color = (0, 0, 255)  # red
+        if math.user_answer == math.current_answer:
+            answer_color = (0, 255, 0)  # green
+            cv2.putText(image, "Correct!", (w - 400, 150), cv2.FONT_HERSHEY_PLAIN, 5, (0, 255, 0), 5)
+        cv2.putText(image, math.user_answer, (w - 100, 70), cv2.FONT_HERSHEY_PLAIN, 5, answer_color, 5)
         cv2.rectangle(image, (0, h - 75), (w, h - 175), (0, 0, 0), cv2.FILLED)
         # display fact about answer on multiple lines
         for i, line in enumerate(math.number_fact.split("\n")):
             cv2.putText(image, ("Hint: " if i == 0 else "") + line, (10, h - (150 - (25 * (i + 1)))),
                         cv2.FONT_HERSHEY_PLAIN, 1.8, (255, 255, 255), 2)
-        if math.user_answer == math.current_answer:
-            cv2.putText(image, "Correct!", (10, 150), cv2.FONT_HERSHEY_PLAIN, 5, (0, 255, 0), 5)
     elif not menu and math.game_over:
         cv2.putText(image, "Score: " + str(math.correct_answers / math.total_questions * 100) + "%", (10, 70),
                     cv2.FONT_HERSHEY_PLAIN,
