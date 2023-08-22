@@ -82,3 +82,5 @@ while True:
         if not menu:
             math.join()
         break
+    
+cv2.destroyAllWindows()
