@@ -1,5 +1,6 @@
 import cv2
-import HandTracking as ht
+import hand_tracking as ht
+
 
 class FingerCounting(ht.HandDetector):
     def __init__(self):
@@ -30,6 +31,7 @@ class FingerCounting(ht.HandDetector):
 
         return len(fingers_open[0]) + len(fingers_open[1])
 
+
 def main():
     cap = cv2.VideoCapture(0)
     detector = FingerCounting()
@@ -37,11 +39,13 @@ def main():
         success, img = cap.read()
         image = cv2.flip(img, 1)
         image = detector.find_hands(image, draw=False)
-        cv2.putText(image, detector.hand_side + ": " + str(detector.count_fingers(image)), (10, 70), cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
+        cv2.putText(image, detector.hand_side + ": " + str(detector.count_fingers(image)), (10, 70),
+                    cv2.FONT_HERSHEY_PLAIN, 5, (255, 0, 255), 5)
         cv2.imshow("Output", image)
         cv2.waitKey(1)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
 
 if __name__ == "__main__":
     main()
