@@ -16,7 +16,7 @@ class MathQuestions(threading.Thread):
             "4": ["What is 3.07 x 1.3?"],
             "5": ["What is 3.33% of 150?"],
             "6": ["What is 84 / 14?"],
-            "7": ["What is 56 / 7?"],
+            "7": ["What is 56 / 8?"],
             "8": ["What is 64 / 8?"],
             "9": ["What is 3^2?"],
             "10": ["What is log2(1024)?"]
