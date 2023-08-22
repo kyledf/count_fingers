@@ -23,7 +23,7 @@ class MathQuestions(threading.Thread):
         }
         self.current_question = ""
         self.current_answer = ""
-        self.total_questions = sum([len(self.answers_and_questions[key]) for key in self.answers_and_questions.keys()])
+        self.total_questions = len(self.answers_and_questions.keys())
         self.correct_answers = 0
         self.user_answer = ""
         self.game_over = False
