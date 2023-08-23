@@ -82,5 +82,6 @@ while True:
         if not menu:
             math.join()
         break
-    
+
+cap.release()
 cv2.destroyAllWindows()
